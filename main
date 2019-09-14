@@ -1,5 +1,10 @@
 """
-
 Core project
-
 """
+
+def first_function():
+    """
+    Docstring Description
+    Returns: None
+    """
+    return None
