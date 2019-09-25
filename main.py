@@ -1,6 +1,4 @@
-"""
-Core project
-"""
+import os
 from skimage.exposure import histogram
 from imageio import imread
 import numpy as np
@@ -8,7 +6,27 @@ import imageio
 from skimage.filters import sobel
 from skimage.morphology import watershed
 
-def remove_black_pixels_from_path_v1(path):
+DEBUG = False
+
+def create_nested_directory_from_fullpathv1(fullpath):
+    """
+    Create a nested directory from fullpath with the same name as base directory + _removed_pixels. If the file exists,
+    it does nothing.
+    Args:
+        fullpath: Full path to the directory where the new directory has to be created.
+
+    """
+    os.chdir(fullpath)
+    base_directory = os.path.basename(fullpath)
+    directory = base_directory + "_removed_pixels"
+
+    try:
+        os.mkdir(directory)
+    except FileExistsError:
+        # directory already exists
+        pass
+
+def remove_black_pixels_from_path_v1(path, **kwargs):
     """
     Create a new folder in the same path with the same name as the current folder and the string "_removed_pixels"
     added in the right.
@@ -17,13 +35,16 @@ def remove_black_pixels_from_path_v1(path):
 
     Save each image in the new folder created.
 
-NOTE: Do not delete or modify original images.
+    NOTE: Do not delete or modify original images.
     Args:
         path:
 
     Returns:
 
     """
+
+    debug = kwargs["DEBUG"] if ("DEBUG" in kwargs) else 0
+
     img = imread(uri=path, as_gray=True) #Open image on greyscale.
     #hist, hist_centers = histogram(img) #Calculating the histogram of the grey values to determine markers.
 
@@ -38,7 +59,7 @@ NOTE: Do not delete or modify original images.
     elevation_map = sobel(img)        #amplitude of the gradient provides a good elevation map.
     segmentation = watershed(elevation_map, markers) #We use the Sobel operator for computing the amplitude of the
                                                      #gradient.
-    ax, ay = segmentation.shape
+    ay, ax = segmentation.shape
     #Convert the array to binary to use it as an alpha channel.
     segmentation_r = segmentation.reshape(segmentation.shape[0]*segmentation.shape[1])
     for i in range(segmentation_r.shape[0]):
@@ -47,10 +68,12 @@ NOTE: Do not delete or modify original images.
         else:
             segmentation_r[i] = 0
 
-    alpha = segmentation_r.reshape(ax, ay)
+    alpha = segmentation_r.reshape(ay, ax)
     img_rgb = imread(path)
     img_rgb_np = np.asarray(img_rgb)
 
     #Adding the alpha channel to the image, where 0 is a transparent pixel.
     no_background = np.dstack((img_rgb_np, alpha)).astype("uint8")
     imageio.imwrite('index_photo4_removed_pixels.png', no_background)
+
+remove_black_pixels_from_path_v1("C:", DEBUG=DEBUG, x=2)
