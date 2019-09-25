@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from skimage.exposure import histogram
 from imageio import imread
 import numpy as np
@@ -8,7 +9,7 @@ from skimage.morphology import watershed
 
 DEBUG = False
 
-def create_nested_directory_from_fullpathv1(fullpath):
+def create_nested_directory_from_fullpathv2(fullpath):
     """
     Create a nested directory from fullpath with the same name as base directory + _removed_pixels. If the file exists,
     it does nothing.
@@ -16,15 +17,9 @@ def create_nested_directory_from_fullpathv1(fullpath):
         fullpath: Full path to the directory where the new directory has to be created.
 
     """
-    os.chdir(fullpath)
-    base_directory = os.path.basename(fullpath)
-    directory = base_directory + "_removed_pixels"
-
-    try:
-        os.mkdir(directory)
-    except FileExistsError:
-        # directory already exists
-        pass
+    path = Path(fullpath)
+    os.chdir(path)
+    Path(path.name + '_removed_pixels').mkdir(exist_ok=True)
 
 def remove_black_pixels_from_path_v1(path, **kwargs):
     """
@@ -44,6 +39,9 @@ def remove_black_pixels_from_path_v1(path, **kwargs):
     """
 
     debug = kwargs["DEBUG"] if ("DEBUG" in kwargs) else 0
+
+    create_nested_directory_from_fullpathv1(path)
+
 
     img = imread(uri=path, as_gray=True) #Open image on greyscale.
     #hist, hist_centers = histogram(img) #Calculating the histogram of the grey values to determine markers.
