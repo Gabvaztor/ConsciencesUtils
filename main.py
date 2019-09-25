@@ -9,7 +9,7 @@ from skimage.morphology import watershed
 
 DEBUG = False
 
-def create_nested_directory_from_fullpathv2(fullpath):
+def create_nested_directory_from_fullpathv1(fullpath):
     """
     Create a nested directory from fullpath with the same name as base directory + _removed_pixels. If the file exists,
     it does nothing.
@@ -18,8 +18,7 @@ def create_nested_directory_from_fullpathv2(fullpath):
 
     """
     path = Path(fullpath)
-    os.chdir(path)
-    Path(path.name + '_removed_pixels').mkdir(exist_ok=True)
+    Path(fullpath + os.sep + path.name + '_removed_pixels').mkdir(exist_ok=True)
 
 def remove_black_pixels_from_path_v1(path, **kwargs):
     """
