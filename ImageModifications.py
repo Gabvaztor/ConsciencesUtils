@@ -89,16 +89,19 @@ def crop_image_from_image_array_by_black_pixels(image_array, image):
     cropped_img = image.crop(area)
     return cropped_img
 
-def remove_black_pixels_from_path_v2(path):
+def remove_black_pixels_of_image_path_v2(path):
     """
 
     Args:
         path:
 
     """
+    print("Creating folder...")
     # Step 1
     new_folder_name = create_nested_directory_from_path_v1(path=path)
+    print("Folder created!")
     # Step 2
+    print("Executing...")
     for count_number, file in enumerate(os.listdir(path)):
         filename = os.fsdecode(file)
         if filename.endswith((".jpeg", ".jpg", ".png")):
@@ -108,3 +111,4 @@ def remove_black_pixels_from_path_v2(path):
             img_cropped.save(new_folder_name + filename)
         else:
             continue
+    print("Finish!")
