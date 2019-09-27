@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import numpy
+import numpy as np
 from PIL import Image
 
 def create_nested_directory_from_path_v1(path):
@@ -44,17 +44,30 @@ def get_pixel_not_black_from_array(row_or_column_array):
             break
     return index_to_return
 
-def get_image_array(fullpath):
+def get_image_array(fullpath, resize_dimensions=None):
     """
-
     Args:
         fullpath:
+        resize_dimensions: resize_dimensions: is a tuple with the format: (height, width). Ths will be the new dimension of the images.
+        If none, then the image will be the same.
+
 
     Returns: Image.img , array image
 
     """
+
     img = Image.open(fullpath) # Imgur's naming scheme
-    image_array = numpy.array(img)        # Convert to array
+
+    if resize_dimensions:
+        w = list(resize_dimensions)[1]
+        h = list(resize_dimensions)[0]
+        size = (w, h)
+        image_array = np.array(img.resize(size))  # Resize image
+    else:
+        image_array = np.array(img) # Convert to array
+
+    #print("array: ", image_array.shape)
+
     return  img, image_array
 
 def crop_image_from_image_array_by_black_pixels(image_array, image):
@@ -86,14 +99,17 @@ def crop_image_from_image_array_by_black_pixels(image_array, image):
 
 
     area = (left_column_to_crop, top_row_to_crop, w - right_column_to_crop, h - bottom_row_to_crop)
+    #cropped_img = image.crop(area)
+    image =  Image.fromarray(np.uint8(image_array))
     cropped_img = image.crop(area)
     return cropped_img
 
-def remove_black_pixels_of_image_path_v2(path):
+def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None):
     """
-
     Args:
-        path:
+        path: images path
+        resize_dimensions: is a tuple with the format: (height, width). Ths will be the new dimension of the images.
+        If none, then the image will be the same.
 
     """
     print("Creating folder...")
@@ -105,10 +121,18 @@ def remove_black_pixels_of_image_path_v2(path):
     for count_number, file in enumerate(os.listdir(path)):
         filename = os.fsdecode(file)
         if filename.endswith((".jpeg", ".jpg", ".png")):
-            img, image_array = get_image_array(fullpath=path + os.sep + filename)
-            img_cropped = crop_image_from_image_array_by_black_pixels(image=img, image_array=image_array)
+            image_cropped = None
+            img, image_array = get_image_array(fullpath=path + os.sep + filename, resize_dimensions=resize_dimensions)
+            try:
+                image_cropped = crop_image_from_image_array_by_black_pixels(image=img, image_array=image_array)
+            except Exception as e:
+                print(str(e))
             # Step 3: Save
-            img_cropped.save(new_folder_name + filename)
+            if image_cropped:
+                new_fullpath = new_folder_name + filename
+                image_cropped.save(new_fullpath)
+            else:
+                img.save(new_folder_name + filename)
         else:
             continue
     print("Finish!")
