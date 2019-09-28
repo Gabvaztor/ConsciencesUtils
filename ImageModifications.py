@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 def create_nested_directory_from_path_v1(path):
     """
@@ -17,17 +17,18 @@ def create_nested_directory_from_path_v1(path):
     Path(new_folder_name).mkdir(exist_ok=True)
     return new_folder_name
 
-def get_image_array(fullpath, resize_dimensions=None):
+def get_image_array(fullpath, resize_dimensions=None, keep_aspect_ratio=False):
     """
     Get image from fullpath.
     (Optional) Resize the image to the given resize dimensions.
     Convert it to numpy array.
 
     Args:
-        fullpath:
+        fullpath: fullpath of image
         resize_dimensions: resize_dimensions is a tuple with the format: (height, width). Ths will be the new dimension
         of the images.
         If none, then the image will be the same.
+        keep_aspect_ratio: True if we want to keep aspect ratio of new images.
 
 
     Returns: Image.img , array image
@@ -40,14 +41,18 @@ def get_image_array(fullpath, resize_dimensions=None):
         w = list(resize_dimensions)[0]
         h = list(resize_dimensions)[1]
         size = (w, h)
-        width, high = img.size
-        aspect_ratio = int((width / high) * h)
-        if w == aspect_ratio:
-            # If the aspect ratio of the original image is the same as the resize dimensions
-            image_array = np.array(img.resize(size), Image.BICUBIC) # Resize image
+        if keep_aspect_ratio:
+            width, high = img.size
+            aspect_ratio = int((width / high) * h)
+            if w == aspect_ratio:
+                # If the aspect ratio of the original image is the same as the resize dimensions
+                image_array = np.array(img.resize(size), Image.BICUBIC) # Resize image
+            else:
+                # To keep it the same, if the aspect ratio of the original image is different of the resize dimensions
+                image_array = np.array(img.resize((aspect_ratio, h), Image.BICUBIC))  # Resize image
         else:
-            # To keep it the same, if the aspect ratio of the original image is different of the resize dimensions
-            image_array = np.array(img.resize((aspect_ratio, h), Image.BICUBIC))  # Resize image
+            img = ImageOps.fit(img, size, Image.ANTIALIAS)
+            image_array = np.array(img) # Convert to array
     else:
         image_array = np.array(img) # Convert to array
 
@@ -109,7 +114,7 @@ def crop_image_from_image_array_by_black_pixels(image_array, image):
     cropped_img = image.crop(area)
     return cropped_img
 
-def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None):
+def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspect_ratio=False):
     """
     From the path to the image folder, create a new nested folder with the same name as the image
     folder + '_removed_pixels'.
@@ -121,7 +126,7 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None):
         path: images path
         resize_dimensions: is a tuple with the format: (height, width). Ths will be the new dimension of the images.
         If none, then the image will be the same.
-
+        keep_aspect_ratio: True if we want to keep aspect ratio of new images.
     """
     print("Creating folder...")
     # Step 1: Creating the new nested folder

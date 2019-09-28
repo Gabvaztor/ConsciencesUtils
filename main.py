@@ -26,4 +26,4 @@ if __name__ == "__main__":
     height, width = 720, 1280
     resize_dimensions = (width, height)
 
-    remove_black_pixels_of_image_path_v2(path=path_, resize_dimensions=resize_dimensions)
+    remove_black_pixels_of_image_path_v2(path=path_, resize_dimensions=resize_dimensions, keep_aspect_ratio=False)
