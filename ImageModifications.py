@@ -95,16 +95,16 @@ def crop_image_from_image_array_by_black_pixels(image_array, image):
     half_of_rows_resolution = int(h / 2)
     half_of_column_resolution = int(w / 2)
 
-    # Recogemos la columna que hay que cortar por la izquierda
+    # Get the column to cut from the left
     left_column_to_crop = get_pixel_not_black_from_array(row_or_column_array=
                                                          image_array[half_of_rows_resolution])
-    # Recogemos la columna que hay que cortar por la derecha
+    # Get the column to cut from the right
     right_column_to_crop = get_pixel_not_black_from_array(row_or_column_array=
                                                           reversed(image_array[half_of_rows_resolution]))
-    # Recogemos la columna que hay que cortar por la izquierda
+    # Get the row to cut from the top
     top_row_to_crop = get_pixel_not_black_from_array(row_or_column_array=
                                                      image_array[:,half_of_column_resolution])
-    # Recogemos la columna que hay que cortar por la izquierda
+    # Get the row to cut from the bottom
     bottom_row_to_crop = get_pixel_not_black_from_array(row_or_column_array=
                                                         reversed(image_array[:,half_of_column_resolution]))
 
@@ -150,6 +150,7 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspe
             if image_cropped:
                 image_cropped.save(new_fullpath, "JPEG")
             else:
+                # If crop fail save the original image
                 img.save(new_folder_name + file, "JPEG")
         else:
             continue
