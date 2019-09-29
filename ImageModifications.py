@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
+from Prints import show_percent_by_total
 
 def create_nested_directory_from_path_v1(path):
     """
@@ -37,26 +38,14 @@ def get_image_array(fullpath, resize_dimensions=None, keep_aspect_ratio=False):
 
     img = Image.open(fullpath) # Imgur's naming scheme
 
-    if resize_dimensions:
-        w = list(resize_dimensions)[0]
-        h = list(resize_dimensions)[1]
-        size = (w, h)
-        if keep_aspect_ratio:
-            width, high = img.size
-            aspect_ratio = int((width / high) * h)
-            if w == aspect_ratio:
-                # If the aspect ratio of the original image is the same as the resize dimensions
-                image_array = np.array(img.resize(size), Image.BICUBIC) # Resize image
-            else:
-                # To keep it the same, if the aspect ratio of the original image is different of the resize dimensions
-                image_array = np.array(img.resize((aspect_ratio, h), Image.BICUBIC))  # Resize image
-        else:
-            img = ImageOps.fit(img, size, Image.ANTIALIAS)
-            image_array = np.array(img) # Convert to array
+    if resize_dimensions or keep_aspect_ratio:
+        img, image_array = change_image_resolution_from_PIL_image(img=img,
+                                                                  resize_dimensions=resize_dimensions,
+                                                                  keep_aspect_ratio=keep_aspect_ratio)
     else:
-        image_array = np.array(img) # Convert to array
+        image_array = np.array(img)
 
-    return  img, image_array
+    return img, image_array
 
 def get_pixel_not_black_from_array(row_or_column_array):
     """
@@ -89,32 +78,76 @@ def crop_image_from_image_array_by_black_pixels(image_array, image):
     Returns: Image cropped array
 
     """
-    h, w, _ = image_array.shape
+    try:
+        h, w, _ = image_array.shape
 
-    # the middle row and column
-    half_of_rows_resolution = int(h / 2)
-    half_of_column_resolution = int(w / 2)
+        # the middle row and column
+        half_of_rows_resolution = int(h / 2)
+        half_of_column_resolution = int(w / 2)
 
-    # Get the column to cut from the left
-    left_column_to_crop = get_pixel_not_black_from_array(row_or_column_array=
-                                                         image_array[half_of_rows_resolution])
-    # Get the column to cut from the right
-    right_column_to_crop = get_pixel_not_black_from_array(row_or_column_array=
-                                                          reversed(image_array[half_of_rows_resolution]))
-    # Get the row to cut from the top
-    top_row_to_crop = get_pixel_not_black_from_array(row_or_column_array=
-                                                     image_array[:,half_of_column_resolution])
-    # Get the row to cut from the bottom
-    bottom_row_to_crop = get_pixel_not_black_from_array(row_or_column_array=
-                                                        reversed(image_array[:,half_of_column_resolution]))
+        # Get the column to cut from the left
+        left_column_to_crop = get_pixel_not_black_from_array(row_or_column_array=
+                                                             image_array[half_of_rows_resolution])
+        # Get the column to cut from the right
+        right_column_to_crop = get_pixel_not_black_from_array(row_or_column_array=
+                                                              reversed(image_array[half_of_rows_resolution]))
+        # Get the row to cut from the top
+        top_row_to_crop = get_pixel_not_black_from_array(row_or_column_array=
+                                                         image_array[:,half_of_column_resolution])
+        # Get the row to cut from the bottom
+        bottom_row_to_crop = get_pixel_not_black_from_array(row_or_column_array=
+                                                            reversed(image_array[:,half_of_column_resolution]))
 
-    # The rectangle of the image to be cropped, based on non black pixels found with get_pixel_not_black_from_array()
-    area = (left_column_to_crop, top_row_to_crop, w - right_column_to_crop, h - bottom_row_to_crop)
-    image =  Image.fromarray(np.uint8(image_array))
-    cropped_img = image.crop(area)
-    return cropped_img
+        # The rectangle of the image to be cropped, based on non black pixels found with get_pixel_not_black_from_array()
+        area = (left_column_to_crop, top_row_to_crop, w - right_column_to_crop, h - bottom_row_to_crop)
+        image =  Image.fromarray(np.uint8(image_array))
+        cropped_img = image.crop(area)
+        return cropped_img
+    except Exception as e:
+        # If error, it returns the original image.
+        print(str(e))
+        return image
 
-def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspect_ratio=False):
+def change_image_resolution_from_PIL_image(img, resize_dimensions=None, keep_aspect_ratio=False):
+    """
+    Resize the image to the given resize dimensions.
+    Convert it to numpy array.
+
+    Args:
+        img: PIL image opened
+        resize_dimensions: resize_dimensions is a tuple with the format: (height, width). Ths will be the new dimension
+        of the images.
+        If none, then the image will be the same.
+        keep_aspect_ratio: True if we want to keep aspect ratio of new images.
+
+
+    Returns: Image.img , array image
+
+    """
+    if resize_dimensions:
+        w = list(resize_dimensions)[0]
+        h = list(resize_dimensions)[1]
+        size = (w, h)
+        if keep_aspect_ratio:
+            width, high = img.size
+            aspect_ratio = int((width / high) * h)
+            if w == aspect_ratio:
+                # If the aspect ratio of the original image is the same as the resize dimensions
+                image_array = np.array(img.resize(size), Image.BICUBIC) # Resize image
+            else:
+                # To keep it the same, if the aspect ratio of the original image is different of the resize dimensions
+                image_array = np.array(img.resize((aspect_ratio, h), Image.BICUBIC))  # Resize image
+        else:
+            img = ImageOps.fit(img, size, Image.ANTIALIAS)
+            #img = img.resize(size, Image.ANTIALIAS)
+            image_array = np.array(img) # Convert to array
+    else:
+        image_array = np.array(img) # Convert to array
+
+    return  img, image_array
+
+
+def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspect_ratio=False, force_dimensions=False):
     """
     From the path to the image folder, create a new nested folder with the same name as the image
     folder + '_removed_pixels'.
@@ -126,7 +159,10 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspe
         path: images path
         resize_dimensions: is a tuple with the format: (height, width). Ths will be the new dimension of the images.
         If none, then the image will be the same.
+
         keep_aspect_ratio: True if we want to keep aspect ratio of new images.
+
+        force_dimensions: True if we want save the image with a specific resolution.
     """
     print("Creating folder...")
     # Step 1: Creating the new nested folder
@@ -134,18 +170,29 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspe
     print("Folder created!")
     print("Executing...")
     # Step 2: Iterating over all the files in the image folder and processing it
-    for count_number, file in enumerate(os.listdir(path)):
+
+    all_files = os.listdir(path)
+    total_files = len(all_files)
+    for count_number, file in enumerate(all_files):
+        show_percent_by_total(total=total_files, count_number=count_number)
         new_fullpath = new_folder_name + file # Fullpath of each file in directory
         # Processing only those with the given suffixes
         if file.endswith((".jpeg", ".jpg", ".png")):
             image_cropped = None
-            # Converting the image to numpy array and resizing if arguments given, keeping the original aspect ratio
-            img, image_array = get_image_array(fullpath=path + os.sep + file, resize_dimensions=resize_dimensions)
-            # Cropping the image, catching exeptions if the image cropping fail
-            try:
+            if not force_dimensions:
+                # Converting the image to numpy array and resizing if arguments given, keeping the original aspect ratio
+                img, image_array = get_image_array(fullpath=path + os.sep + file,
+                                                   resize_dimensions=resize_dimensions,
+                                                   keep_aspect_ratio=keep_aspect_ratio)
+                # Cropping the image, catching exeptions if the image cropping fail
                 image_cropped = crop_image_from_image_array_by_black_pixels(image=img, image_array=image_array)
-            except Exception as e:
-                print(str(e))
+            else:
+                img, image_array = get_image_array(fullpath=path + os.sep + file)
+                image_cropped = crop_image_from_image_array_by_black_pixels(image=img, image_array=image_array)
+                image_cropped, image_array = change_image_resolution_from_PIL_image(img=image_cropped,
+                                                                                   resize_dimensions=resize_dimensions,
+                                                                                   keep_aspect_ratio=keep_aspect_ratio)
+
             # Step 3: Save the cropped images
             if image_cropped:
                 image_cropped.save(new_fullpath, "JPEG")
@@ -155,3 +202,4 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspe
         else:
             continue
     print("Finish!")
+
