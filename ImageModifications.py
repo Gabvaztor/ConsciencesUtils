@@ -138,8 +138,8 @@ def change_image_resolution_from_PIL_image(img, resize_dimensions=None, keep_asp
                 # To keep it the same, if the aspect ratio of the original image is different of the resize dimensions
                 image_array = np.array(img.resize((aspect_ratio, h), Image.BICUBIC))  # Resize image
         else:
-            img = ImageOps.fit(img, size, Image.ANTIALIAS)
-            #img = img.resize(size, Image.ANTIALIAS)
+            #img = ImageOps.fit(img, size, Image.ANTIALIAS)
+            img = img.resize(size, Image.ANTIALIAS)
             image_array = np.array(img) # Convert to array
     else:
         image_array = np.array(img) # Convert to array
