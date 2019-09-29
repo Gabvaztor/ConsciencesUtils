@@ -17,7 +17,7 @@ from ImageModifications import remove_black_pixels_of_image_path_v3
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("->i", "--path_images", required=False,
+    ap.add_argument("-i", "--path_images", required=False,
                     help="Path of images")
 
     args = vars(ap.parse_args())

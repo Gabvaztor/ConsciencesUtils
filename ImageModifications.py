@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
-from .Prints import show_percent_by_total
+from Prints import show_percent_by_total
 
 def create_nested_directory_from_path_v1(path):
     """
