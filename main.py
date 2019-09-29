@@ -12,12 +12,12 @@ sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append('../../')
 
-from ImageModifications import remove_black_pixels_of_image_path_v2
+from ImageModifications import remove_black_pixels_of_image_path_v3
 
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--path_images", required=False,
+    ap.add_argument("->i", "--path_images", required=False,
                     help="Path of images")
 
     args = vars(ap.parse_args())
@@ -26,5 +26,7 @@ if __name__ == "__main__":
     height, width = 720, 1280
     resize_dimensions = (width, height)
 
-    remove_black_pixels_of_image_path_v2(path=path_, resize_dimensions=resize_dimensions, keep_aspect_ratio=False,
+    remove_black_pixels_of_image_path_v3(path=path_,
+                                         resize_dimensions=resize_dimensions,
+                                         keep_aspect_ratio=False,
                                          force_dimensions=True)

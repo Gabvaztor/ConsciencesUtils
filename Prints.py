@@ -20,6 +20,6 @@ def pt(title=None, text=None, same_line=False):
     else:
         title += ': '
     if same_line:
-        print(str(title) + str(text), end="\r")
+        print(str(title) + str(text), end="\n\r")
     else:
         print(str(title) + " \n " + str(text))

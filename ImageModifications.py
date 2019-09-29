@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
-from Prints import show_percent_by_total
+from .Prints import show_percent_by_total
 
 def create_nested_directory_from_path_v1(path):
     """
@@ -147,7 +147,8 @@ def change_image_resolution_from_PIL_image(img, resize_dimensions=None, keep_asp
     return  img, image_array
 
 
-def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspect_ratio=False, force_dimensions=False):
+def remove_black_pixels_of_image_path_v3(path, resize_dimensions=None, keep_aspect_ratio=False, force_dimensions=False,
+                                         **kwargs):
     """
     From the path to the image folder, create a new nested folder with the same name as the image
     folder + '_removed_pixels'.
@@ -163,7 +164,12 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspe
         keep_aspect_ratio: True if we want to keep aspect ratio of new images.
 
         force_dimensions: True if we want save the image with a specific resolution.
+
+        kwargs: kwargs can contain:
+                - "DEBUG": means if the current status is Debugging
     """
+
+    DEBUG = True if "DEBUG" in kwargs else False
     print("Creating folder...")
     # Step 1: Creating the new nested folder
     new_folder_name = create_nested_directory_from_path_v1(path=path)
@@ -192,13 +198,20 @@ def remove_black_pixels_of_image_path_v2(path, resize_dimensions=None, keep_aspe
                 image_cropped, image_array = change_image_resolution_from_PIL_image(img=image_cropped,
                                                                                    resize_dimensions=resize_dimensions,
                                                                                    keep_aspect_ratio=keep_aspect_ratio)
+            if DEBUG:
+                print("img.size", image_cropped.size)
+                image_cropped.show()
+                input("Click for next iteration")
+                # return image_cropped
 
-            # Step 3: Save the cropped images
-            if image_cropped:
-                image_cropped.save(new_fullpath, "JPEG")
+
             else:
-                # If crop fail save the original image
-                img.save(new_folder_name + file, "JPEG")
+                # Step 3: Save the cropped images
+                if image_cropped:
+                    image_cropped.save(new_fullpath, "JPEG")
+                else:
+                    # If crop fail save the original image
+                    img.save(new_folder_name + file, "JPEG")
         else:
             continue
     print("Finish!")
