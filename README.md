@@ -2,4 +2,4 @@
 
 ConsciencesUtils - Python 3
 
-This is the projects with utils for Consciences Framework
+This is the project with utils for Consciences Framework
